@@ -8,15 +8,15 @@ namespace ASPNETCoreIdentityDemo.Controllers
     public class AccountController : Controller
     {
         //userManager will hold the UserManager instance
-        private readonly UserManager<IdentityUser> userManager;
+        private readonly UserManager<ApplicationUser> userManager;
 
         //signInManager will hold the SignInManager instance
-        private readonly SignInManager<IdentityUser> signInManager;
+        private readonly SignInManager<ApplicationUser> signInManager;
 
         //Both UserManager and SignInManager services are injected into the AccountController
         //using constructor injection
-        public AccountController(UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -33,11 +33,13 @@ namespace ASPNETCoreIdentityDemo.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Copy data from RegisterViewModel to IdentityUser
-                var user = new IdentityUser
+                // Copy data from RegisterViewModel to ApplicationUser
+                var user = new ApplicationUser
                 {
                     UserName = model.Email,
-                    Email = model.Email
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName
                 };
 
                 // Store user data in AspNetUsers database table
@@ -61,6 +63,7 @@ namespace ASPNETCoreIdentityDemo.Controllers
 
             return View(model);
         }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -105,6 +108,22 @@ namespace ASPNETCoreIdentityDemo.Controllers
         {
             await signInManager.SignOutAsync();
             return RedirectToAction("index", "home");
+        }
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> IsEmailAvailable(string Email)
+        {
+            //Check If the Email Id is Already in the Database
+            var user = await userManager.FindByEmailAsync(Email);
+
+            if (user == null)
+            {
+                return Json(true);
+            }
+            else
+            {
+                return Json($"Email {Email} is already in use.");
+            }
         }
 
 
